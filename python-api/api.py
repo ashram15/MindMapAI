@@ -83,17 +83,29 @@ def fetch_wiki_thumbnail(title):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Loading Metadata...")
-    global metadata, model
+    print("Starting API server...")
+    global metadata
+    # Load metadata immediately (fast)
     with open(DATA_FILE, "r") as f:
         raw_data = json.load(f)
         metadata = {item["id"]: item for item in raw_data}
-
-    print("Loading Embedding Model...")
-    model = SentenceTransformer(MODEL_NAME)
-    print("System Ready!")
+    print("Metadata loaded!")
+    
+    # Load model in background to avoid blocking Railway health check
+    import asyncio
+    asyncio.create_task(load_model())
+    
     yield
     print("Shutting down...")
+
+
+async def load_model():
+    """Load model in background after app startup"""
+    global model
+    print("Loading Embedding Model in background...")
+    model = SentenceTransformer(MODEL_NAME)
+    print("System Ready! Model loaded.")
+
 
 app = FastAPI(lifespan=lifespan)
 
@@ -109,12 +121,12 @@ app.add_middleware(
 # Health check endpoints for Railway
 @app.get("/")
 def root():
-    return {"status": "ok", "service": "python-api"}
+    return {"status": "ok", "service": "python-api", "ready": model is not None}
 
 
 @app.get("/health")
 def health():
-    return {"status": "healthy", "model_loaded": model is not None}
+    return {"status": "healthy"}
 
 
 @app.post("/search")
@@ -124,6 +136,10 @@ def search(query: dict):
 
     if DEV_MODE:
         return get_mock_response(user_text)
+    
+    # Wait for model to load if not ready yet
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model still loading, please try again in a few seconds")
 
     if not user_text:
         raise HTTPException(status_code=400, detail="Text is required")
