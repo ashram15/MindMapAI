@@ -7,8 +7,14 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copy source and build
+# Copy source
 COPY . .
+
+# Accept build-time environment variable
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
+# Build with environment variable baked in
 RUN npm run build
 
 EXPOSE 3000
