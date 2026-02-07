@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir \
     uvicorn[standard]==0.24.0 \
     requests==2.31.0 \
     numpy==1.26.2 \
-    sentence-transformers==2.2.2 \
+    sentence-transformers==2.7.0 \
     google-generativeai==0.3.2 \
     python-dotenv==1.0.0 \
     wikipedia==1.4.0 && \
