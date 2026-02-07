@@ -3,12 +3,15 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Copy only necessary files
+# Copy application files first
 COPY api.py .
 COPY data.json .
 COPY create_embeddings.py .
 
-# Install dependencies with no cache to reduce size
+# Install PyTorch CPU-only (much smaller than GPU version)
+RUN pip install --no-cache-dir torch==2.1.0 --index-url https://download.pytorch.org/whl/cpu
+
+# Install remaining dependencies
 RUN pip install --no-cache-dir \
     fastapi==0.104.1 \
     uvicorn[standard]==0.24.0 \
@@ -19,7 +22,8 @@ RUN pip install --no-cache-dir \
     python-dotenv==1.0.0 \
     wikipedia==1.4.0 && \
     rm -rf /root/.cache/pip && \
-    rm -rf /tmp/*
+    rm -rf /tmp/* && \
+    find /usr/local/lib/python3.11 -type d -name "tests" -o -name "test" | xargs rm -rf
 
 EXPOSE 8000
 
