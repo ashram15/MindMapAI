@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir \
     requests==2.31.0 \
     numpy==1.26.2 \
     sentence-transformers==2.7.0 \
-    google-generativeai==0.3.2 \
+    google-generativeai==0.8.3 \
     python-dotenv==1.0.0 \
     wikipedia==1.4.0 && \
     rm -rf /root/.cache/pip && \

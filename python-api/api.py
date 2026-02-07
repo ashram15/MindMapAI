@@ -38,7 +38,6 @@ if not GEMINI_API_KEY:
 
 genai.configure(api_key=GEMINI_API_KEY)
 
-model_config = genai.GenerationConfig(response_mime_type="application/json")
 gemini_model = genai.GenerativeModel(
     'gemini-3-flash-preview'
 )
@@ -95,9 +94,9 @@ async def lifespan(app: FastAPI):
     import threading
     thread = threading.Thread(target=load_model_sync, daemon=True)
     thread.start()
-    
+
     print("Server ready to accept requests!")
-    
+
     yield
     print("Shutting down...")
 
@@ -130,7 +129,8 @@ async def root():
 @app.get("/health")
 async def health():
     import os
-    print(f"Health check called. Model loaded: {model is not None}. Port: {os.getenv('PORT', '8000')}")
+    print(
+        f"Health check called. Model loaded: {model is not None}. Port: {os.getenv('PORT', '8000')}")
     return {"status": "healthy"}
 
 
