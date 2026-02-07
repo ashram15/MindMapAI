@@ -8,8 +8,8 @@ COPY api.py .
 COPY data.json .
 COPY create_embeddings.py .
 
-# Install PyTorch CPU-only (much smaller than GPU version)
-RUN pip install --no-cache-dir torch==2.1.0 --index-url https://download.pytorch.org/whl/cpu
+# Install PyTorch CPU-only (much smaller than GPU version) - v2.2+ for compatibility
+RUN pip install --no-cache-dir torch==2.2.0 --index-url https://download.pytorch.org/whl/cpu
 
 # Install remaining dependencies
 RUN pip install --no-cache-dir \
