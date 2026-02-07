@@ -65,6 +65,15 @@ int main() {
 
   httplib::Server svr;
 
+  // Health check endpoint for Railway
+  svr.Get("/", [](const httplib::Request &req, httplib::Response &res) {
+    res.set_content("{\"status\":\"ok\",\"service\":\"cpp-engine\"}", "application/json");
+  });
+
+  svr.Get("/health", [](const httplib::Request &req, httplib::Response &res) {
+    res.set_content("{\"status\":\"healthy\"}", "application/json");
+  });
+
   svr.Post("/search", [&](const httplib::Request &req, httplib::Response &res) {
     try {
       auto input = json::parse(req.body);
