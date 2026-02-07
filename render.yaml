@@ -1,0 +1,48 @@
+services:
+  # C++ Vector Search Engine
+  - type: web
+    name: mindmap-cpp-engine
+    env: docker
+    dockerfilePath: ./cpp-engine/Dockerfile
+    dockerContext: ./cpp-engine
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: 8080
+
+  # Python FastAPI Backend
+  - type: web
+    name: mindmap-python-api
+    env: docker
+    dockerfilePath: ./python-api/Dockerfile
+    dockerContext: ./python-api
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: GEMINI_API_KEY
+        sync: false  # You'll set this manually in Render dashboard
+      - key: CPP_SERVER_URL
+        fromService:
+          type: web
+          name: mindmap-cpp-engine
+          envVarKey: RENDER_EXTERNAL_URL
+        value: /search
+      - key: DEV_MODE
+        value: false
+
+  # Next.js Frontend
+  - type: web
+    name: mindmap-frontend
+    env: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    plan: free
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: mindmap-python-api
+          envVarKey: RENDER_EXTERNAL_URL

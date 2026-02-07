@@ -7,6 +7,9 @@ import * as THREE from 'three';
 
 const ForceGraph3D = dynamic(() => import('react-force-graph-3d'), { ssr: false });
 
+// API URL from environment variable, fallback to localhost for development
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export default function SearchGraph() {
     const [graphData, setGraphData] = useState({ nodes: [], links: [] });
     const [searchQuery, setSearchQuery] = useState("");
@@ -75,7 +78,7 @@ export default function SearchGraph() {
             try {
                 setAgentThoughts(prev => [...prev, `🚀 Deploying ${persona.toUpperCase()} Agent...`]);
 
-                const res = await fetch(`http://localhost:8000/research-agent`, {
+                const res = await fetch(`${API_URL}/research-agent`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text: query, k: 5, persona: persona })
@@ -111,7 +114,7 @@ export default function SearchGraph() {
 
             try {
                 console.log("Uploading image...");
-                const res = await fetch(`http://localhost:8000/analyze-image`, {
+                const res = await fetch(`${API_URL}/analyze-image`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ image_base64: base64String })
@@ -558,7 +561,7 @@ export default function SearchGraph() {
 
                     // 3. Fetch Image in Background
                     console.log("Fetching image for:", node.name);
-                    fetch(`http://localhost:8000/get-node-image`, {
+                    fetch(`${API_URL}/get-node-image`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ text: node.name })
