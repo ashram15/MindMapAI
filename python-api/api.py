@@ -43,10 +43,12 @@ gemini_model = genai.GenerativeModel(
     'gemini-3-flash-preview'
 )
 
+
 class SearchRequest(BaseModel):
     text: str
     k: int = 5
-    persona: str = "general" # Options: 'optimist', 'critic', 'historian'
+    persona: str = "general"  # Options: 'optimist', 'critic', 'historian'
+
 
 class ImageRequest(BaseModel):
     image_base64: str
@@ -54,6 +56,7 @@ class ImageRequest(BaseModel):
 
 metadata = {}
 model = None
+
 
 def fetch_wiki_thumbnail(title):
     url = "https://en.wikipedia.org/w/api.php"
@@ -65,7 +68,7 @@ def fetch_wiki_thumbnail(title):
         "pithumbsize": 500,
         "redirects": 1
     }
-    headers = { "User-Agent": "MindMapAI/1.0" }
+    headers = {"User-Agent": "MindMapAI/1.0"}
     try:
         response = requests.get(url, params=params, headers=headers, timeout=5)
         data = response.json()
@@ -77,6 +80,7 @@ def fetch_wiki_thumbnail(title):
         pass
     return None
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Loading Metadata...")
@@ -84,7 +88,7 @@ async def lifespan(app: FastAPI):
     with open(DATA_FILE, "r") as f:
         raw_data = json.load(f)
         metadata = {item["id"]: item for item in raw_data}
-    
+
     print("Loading Embedding Model...")
     model = SentenceTransformer(MODEL_NAME)
     print("System Ready!")
@@ -101,11 +105,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# Health check endpoints for Railway
+@app.get("/")
+def root():
+    return {"status": "ok", "service": "python-api"}
+
+
+@app.get("/health")
+def health():
+    return {"status": "healthy", "model_loaded": model is not None}
+
+
 @app.post("/search")
 def search(query: dict):
     user_text = query.get("text", "")
     top_k = query.get("k", 5)
-    
+
     if DEV_MODE:
         return get_mock_response(user_text)
 
@@ -116,16 +132,17 @@ def search(query: dict):
 
     vector = model.encode(user_text)
     vector = vector / np.linalg.norm(vector)
-    
+
     cpp_results = []
     try:
-        response = requests.post(CPP_SERVER_URL, json={"vector": vector.tolist(), "k": top_k})
+        response = requests.post(CPP_SERVER_URL, json={
+                                 "vector": vector.tolist(), "k": top_k})
         cpp_results = response.json()
     except:
         print("C++ Engine Offline")
 
     best_score = cpp_results[0]['score'] if cpp_results else 0.0
-    
+
     if best_score > 0.35:
         print(f"Database Hit (Score: {best_score})")
         final_results = []
@@ -143,13 +160,13 @@ def search(query: dict):
 
     else:
         print("Database Miss. Attempting Gemini Web Search...")
-        
+
         prompt = f"""
         User Query: "{user_text}"
         Generate 5 distinct "Nodes" (related topics) for a Knowledge Graph.
         RETURN JSON ONLY: [ {{ "title": "...", "abstract": "...", "url": "..." }} ]
         """
-        
+
         try:
             try:
                 response = gemini_model.generate_content(prompt)
@@ -159,11 +176,12 @@ def search(query: dict):
 
             except Exception as e:
                 print(f"Plan A Failed ({e}). Switching to Plan B (Pure AI)...")
-                
+
                 fallback_model = genai.GenerativeModel('gemini-1.5-flash')
                 response = fallback_model.generate_content(prompt)
-                
-                text = response.text.replace("```json", "").replace("```", "").strip()
+
+                text = response.text.replace(
+                    "```json", "").replace("```", "").strip()
                 generated_nodes = json.loads(text)
                 print("Plan B (Pure AI) Successful!")
 
@@ -190,10 +208,11 @@ def search(query: dict):
         for i, node in enumerate(generated_nodes):
             node["id"] = f"gen_{hash(user_text)}_{i}"
             node["group"] = "Gemini"
-            if "url" not in node or not node["url"]: 
+            if "url" not in node or not node["url"]:
                 node["url"] = f"https://www.google.com/search?q={node['title']}"
 
         return generated_nodes
+
 
 @app.post("/analyze-image")
 def analyze_image(request: ImageRequest):
@@ -228,16 +247,17 @@ def analyze_image(request: ImageRequest):
 
         model = genai.GenerativeModel('gemini-3-flash-preview')
         response = model.generate_content([prompt, image_data])
-        
-        text_response = response.text.replace("```json", "").replace("```", "").strip()
+
+        text_response = response.text.replace(
+            "```json", "").replace("```", "").strip()
         nodes = json.loads(text_response)
-        
+
         for i, node in enumerate(nodes):
             if i == 0:
                 node['id'] = f"img_main_{hash(node['title'])}"
             else:
                 node['id'] = f"img_sub_{i}_{hash(node['title'])}"
-                
+
             node['url'] = f"https://www.google.com/search?q={node['title']}"
 
         return nodes
@@ -245,23 +265,31 @@ def analyze_image(request: ImageRequest):
     except Exception as e:
         print(f"Vision Error: {e}")
         return [{
-            "id": "error", 
-            "title": "Image Error", 
-            "abstract": "Could not analyze image. Try a clearer photo.", 
+            "id": "error",
+            "title": "Image Error",
+            "abstract": "Could not analyze image. Try a clearer photo.",
             "group": "Gemini",
             "color": "red"
         }]
+
 
 def get_mock_response(topic):
     """Returns free, fake data for testing UI mechanics."""
     print(f"⚠️ DEV MODE: Returning mock data for '{topic}'")
     return [
-        {"id": "mock-1", "title": f"{topic} (Mock 1)", "abstract": "This is a fake node to save API credits.", "group": "Gemini", "url": "https://google.com"},
-        {"id": "mock-2", "title": f"{topic} (Mock 2)", "abstract": "Another fake node for testing.", "group": "Gemini", "url": "https://google.com"},
-        {"id": "mock-3", "title": f"{topic} (Mock 3)", "abstract": "Testing the 3D graph layout.", "group": "Gemini", "url": "https://google.com"},
-        {"id": "mock-4", "title": f"{topic} (Mock 4)", "abstract": "Save your credits for the demo!", "group": "Gemini", "url": "https://google.com"},
-        {"id": "mock-5", "title": f"{topic} (Mock 5)", "abstract": "UI looks good though.", "group": "Gemini", "url": "https://google.com"},
+        {"id": "mock-1", "title": f"{topic} (Mock 1)", "abstract": "This is a fake node to save API credits.",
+         "group": "Gemini", "url": "https://google.com"},
+        {"id": "mock-2", "title": f"{topic} (Mock 2)", "abstract": "Another fake node for testing.",
+         "group": "Gemini", "url": "https://google.com"},
+        {"id": "mock-3", "title": f"{topic} (Mock 3)", "abstract": "Testing the 3D graph layout.",
+         "group": "Gemini", "url": "https://google.com"},
+        {"id": "mock-4", "title": f"{topic} (Mock 4)", "abstract": "Save your credits for the demo!",
+         "group": "Gemini", "url": "https://google.com"},
+        {"id": "mock-5", "title": f"{topic} (Mock 5)", "abstract": "UI looks good though.",
+         "group": "Gemini", "url": "https://google.com"},
     ]
+
+
 @app.post("/research-agent")
 def research_agent(request: SearchRequest):
     """
@@ -271,13 +299,13 @@ def research_agent(request: SearchRequest):
     3. Executes the plan using C++ retrieval.
     4. Returns the 'Thought Process' + 'Final Graph'.
     """
-    
+
     # 1. DEV MODE (Keep this for free testing)
     if DEV_MODE:
         return {
             "thoughts": [
-                "🤔 Analyzing complexity of request...", 
-                "🔍 Detected conflict in physics theories.", 
+                "🤔 Analyzing complexity of request...",
+                "🔍 Detected conflict in physics theories.",
                 "📚 retrieving 'Hawking Radiation' from Vector DB...",
                 "💡 Synthesizing 3D structure..."
             ],
@@ -319,25 +347,27 @@ def research_agent(request: SearchRequest):
             ]
         }}
         """
-        
+
         # 3. CALL GEMINI
         model = genai.GenerativeModel('gemini-3-flash-preview')
         response = model.generate_content(prompt)
-        
+
         # 4. CLEAN & PARSE
-        clean_text = response.text.replace("```json", "").replace("```", "").strip()
+        clean_text = response.text.replace(
+            "```json", "").replace("```", "").strip()
         data = json.loads(clean_text)
-        
+
         data = json.loads(clean_text)
-        
+
         # 5. POST-PROCESS (The Fix: Force Unique IDs)
         if "nodes" in data:
             for node in data["nodes"]:
                 # FIX 1: Generate a unique ID from the title (removes spaces, lowers case)
                 # e.g. "Neural Networks" -> "neural-networks"
-                safe_id = node.get('title', 'unknown').lower().replace(" ", "-")
-                node['id'] = safe_id 
-                
+                safe_id = node.get(
+                    'title', 'unknown').lower().replace(" ", "-")
+                node['id'] = safe_id
+
                 # FIX 2: Smart URLs (Scholar)
                 safe_title = urllib.parse.quote(node.get('title', ''))
                 node['url'] = f"https://scholar.google.com/scholar?q={safe_title}"
@@ -357,6 +387,7 @@ def research_agent(request: SearchRequest):
                 "val": 20
             }]
         }
+
 
 @app.post("/get-node-image")
 def get_node_image(request: SearchRequest):
@@ -378,14 +409,15 @@ def get_node_image(request: SearchRequest):
     try:
         # Plan B: Fallback to scraping images list
         page = wikipedia.page(request.text, auto_suggest=False)
-        
+
         if page.images:
-             # Try to find a non-svg if possible
-            valid_images = [img for img in page.images if not img.lower().endswith('.svg')]
-            
+            # Try to find a non-svg if possible
+            valid_images = [
+                img for img in page.images if not img.lower().endswith('.svg')]
+
             if valid_images:
                 return {"image": valid_images[0]}
-            
+
             # If only SVGs exist, return the first one
             return {"image": page.images[0]}
         else:
