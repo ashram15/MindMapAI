@@ -90,17 +90,20 @@ async def lifespan(app: FastAPI):
         raw_data = json.load(f)
         metadata = {item["id"]: item for item in raw_data}
     print("Metadata loaded!")
+
+    # Load model in background thread to avoid blocking Railway health check
+    import threading
+    thread = threading.Thread(target=load_model_sync, daemon=True)
+    thread.start()
     
-    # Load model in background to avoid blocking Railway health check
-    import asyncio
-    asyncio.create_task(load_model())
+    print("Server ready to accept requests!")
     
     yield
     print("Shutting down...")
 
 
-async def load_model():
-    """Load model in background after app startup"""
+def load_model_sync():
+    """Load model in background thread"""
     global model
     print("Loading Embedding Model in background...")
     model = SentenceTransformer(MODEL_NAME)
@@ -120,12 +123,14 @@ app.add_middleware(
 
 # Health check endpoints for Railway
 @app.get("/")
-def root():
+async def root():
     return {"status": "ok", "service": "python-api", "ready": model is not None}
 
 
 @app.get("/health")
-def health():
+async def health():
+    import os
+    print(f"Health check called. Model loaded: {model is not None}. Port: {os.getenv('PORT', '8000')}")
     return {"status": "healthy"}
 
 
@@ -136,10 +141,11 @@ def search(query: dict):
 
     if DEV_MODE:
         return get_mock_response(user_text)
-    
+
     # Wait for model to load if not ready yet
     if model is None:
-        raise HTTPException(status_code=503, detail="Model still loading, please try again in a few seconds")
+        raise HTTPException(
+            status_code=503, detail="Model still loading, please try again in a few seconds")
 
     if not user_text:
         raise HTTPException(status_code=400, detail="Text is required")
