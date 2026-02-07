@@ -13,7 +13,19 @@ from sentence_transformers import SentenceTransformer
 import google.generativeai as genai
 import os
 
-CPP_SERVER_URL = os.getenv("CPP_SERVER_URL", "http://localhost:8080/search")
+# Get C++ engine URL from environment
+# For Render: CPP_ENGINE_HOST will be the full service URL (e.g., https://mindmap-cpp-engine.onrender.com)
+# For local/Docker: CPP_SERVER_URL can be set directly
+CPP_ENGINE_HOST = os.getenv("CPP_ENGINE_HOST", "")
+CPP_SERVER_URL = os.getenv("CPP_SERVER_URL", "")
+
+if CPP_ENGINE_HOST and not CPP_SERVER_URL:
+    # Construct full URL from host (add /search endpoint)
+    CPP_SERVER_URL = f"{CPP_ENGINE_HOST}/search"
+elif not CPP_SERVER_URL:
+    # Fallback to localhost for development
+    CPP_SERVER_URL = "http://localhost:8080/search"
+
 DATA_FILE = "data.json"
 MODEL_NAME = "all-MiniLM-L6-v2"
 

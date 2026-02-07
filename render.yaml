@@ -24,12 +24,11 @@ services:
         value: 8000
       - key: GEMINI_API_KEY
         sync: false  # You'll set this manually in Render dashboard
-      - key: CPP_SERVER_URL
+      - key: CPP_ENGINE_HOST
         fromService:
           type: web
           name: mindmap-cpp-engine
           envVarKey: RENDER_EXTERNAL_URL
-        value: /search
       - key: DEV_MODE
         value: false
 
