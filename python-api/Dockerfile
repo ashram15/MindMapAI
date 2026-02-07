@@ -18,10 +18,8 @@ RUN pip install --no-cache-dir \
     google-generativeai==0.3.2 \
     python-dotenv==1.0.0 \
     wikipedia==1.4.0 && \
-    rm -rf /root/.cache/pip
-
-# Pre-download ML models during build (fixes Railway timeout)
-RUN python3 -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+    rm -rf /root/.cache/pip && \
+    rm -rf /tmp/*
 
 EXPOSE 8000
 
