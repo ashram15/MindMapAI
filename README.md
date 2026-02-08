@@ -1,5 +1,6 @@
 # 🧠 MindMapAI
 <video src = "./MindMapAI_Demo.mp4" width = "320" height="240" controls></video>
+
 > **An AI-powered 3D knowledge graph visualization system that transforms Wikipedia data into an immersive, interactive learning experience**
 
 MindMapAI is a cutting-edge full-stack application that combines high-performance vector search, AI research agents, and stunning 3D visualizations to create a unique knowledge exploration platform. Built with a microservices architecture featuring a C++ vector engine, Python AI backend, and Next.js frontend.
