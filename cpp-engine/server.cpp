@@ -8,12 +8,14 @@
 
 using json = nlohmann::json;
 
-struct VectorDatabase {
+struct VectorDatabase
+{
   int num_vectors;
   int vector_dim;
   std::vector<float> data;
 
-  bool load(const char *filename) {
+  bool load(const char *filename)
+  {
     FILE *f = fopen(filename, "rb");
     if (!f)
       return false;
@@ -28,7 +30,8 @@ struct VectorDatabase {
   const float *get_vector(int i) const { return &data[i * vector_dim]; }
 
   std::vector<std::pair<float, int>> search(const std::vector<float> &query_vec,
-                                            int k) {
+                                            int k)
+  {
     std::vector<std::pair<float, int>> results;
 
     if (query_vec.size() != vector_dim)
@@ -36,17 +39,20 @@ struct VectorDatabase {
 
     results.reserve(num_vectors);
 
-    for (int i = 0; i < num_vectors; ++i) {
+    for (int i = 0; i < num_vectors; ++i)
+    {
       const float *target_vec = get_vector(i);
       float score = 0.0f;
-      for (int j = 0; j < vector_dim; ++j) {
+      for (int j = 0; j < vector_dim; ++j)
+      {
         score += query_vec[j] * target_vec[j];
       }
       results.push_back({score, i});
     }
 
     std::sort(results.begin(), results.end(),
-              [](const auto &a, const auto &b) { return a.first > b.first; });
+              [](const auto &a, const auto &b)
+              { return a.first > b.first; });
 
     if (results.size() > k)
       results.resize(k);
@@ -54,10 +60,12 @@ struct VectorDatabase {
   }
 };
 
-int main() {
+int main()
+{
   std::cout << "Initializing Engine..." << std::endl;
   VectorDatabase db;
-  if (!db.load("vectors.bin")) {
+  if (!db.load("vectors.bin"))
+  {
     std::cerr << "Error: vectors.bin not found!" << std::endl;
     return 1;
   }
@@ -66,15 +74,14 @@ int main() {
   httplib::Server svr;
 
   // Health check endpoint for Railway
-  svr.Get("/", [](const httplib::Request &req, httplib::Response &res) {
-    res.set_content("{\"status\":\"ok\",\"service\":\"cpp-engine\"}", "application/json");
-  });
+  svr.Get("/", [](const httplib::Request &req, httplib::Response &res)
+          { res.set_content("{\"status\":\"ok\",\"service\":\"cpp-engine\"}", "application/json"); });
 
-  svr.Get("/health", [](const httplib::Request &req, httplib::Response &res) {
-    res.set_content("{\"status\":\"healthy\"}", "application/json");
-  });
+  svr.Get("/health", [](const httplib::Request &req, httplib::Response &res)
+          { res.set_content("{\"status\":\"healthy\"}", "application/json"); });
 
-  svr.Post("/search", [&](const httplib::Request &req, httplib::Response &res) {
+  svr.Post("/search", [&](const httplib::Request &req, httplib::Response &res)
+           {
     try {
       auto input = json::parse(req.body);
       std::vector<float> query = input["vector"];
@@ -91,8 +98,7 @@ int main() {
     } catch (...) {
       res.status = 400;
       res.set_content("{\"error\":\"Invalid JSON\"}", "application/json");
-    }
-  });
+    } });
 
   std::cout << "Server listening on http://localhost:8080" << std::endl;
   svr.listen("0.0.0.0", 8080);

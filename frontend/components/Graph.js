@@ -84,21 +84,29 @@ export default function SearchGraph() {
                     body: JSON.stringify({ text: query, k: 5, persona: persona })
                 });
 
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+
                 const data = await res.json();
 
                 // Streaming Updates!
-                if (data.nodes) {
+                if (data.nodes && Array.isArray(data.nodes)) {
                     updateGraph(data.nodes, query, sourceNodeId);
                     setAgentThoughts(prev => [...prev, `✅ ${persona.toUpperCase()} Agent finished.`]);
+                } else {
+                    console.warn(`Invalid response from ${persona} agent:`, data);
+                    setAgentThoughts(prev => [...prev, `⚠️ ${persona.toUpperCase()} Agent returned invalid data.`]);
                 }
 
-                if (data.thoughts) {
+                if (data.thoughts && Array.isArray(data.thoughts)) {
                     // Just show the first thought to keep it clean
                     if (data.thoughts.length > 0) setAgentThoughts(prev => [...prev, `  > ${data.thoughts[0]}`]);
                 }
 
             } catch (err) {
                 console.error(`${persona} Agent failed`, err);
+                setAgentThoughts(prev => [...prev, `❌ ${persona.toUpperCase()} Agent failed: ${err.message}`]);
             }
         });
 

@@ -199,7 +199,8 @@ def search(query: dict):
             except Exception as e:
                 print(f"Plan A Failed ({e}). Switching to Plan B (Pure AI)...")
 
-                fallback_model = genai.GenerativeModel('gemini-1.5-flash')
+                fallback_model = genai.GenerativeModel(
+                    'gemini-3-flash-preview')
                 response = fallback_model.generate_content(prompt)
 
                 text = response.text.replace(
@@ -267,8 +268,8 @@ def analyze_image(request: ImageRequest):
         ]
         """
 
-        model = genai.GenerativeModel('gemini-3-flash-preview')
-        response = model.generate_content([prompt, image_data])
+        analyze_model = genai.GenerativeModel('gemini-3-flash-preview')
+        response = analyze_model.generate_content([prompt, image_data])
 
         text_response = response.text.replace(
             "```json", "").replace("```", "").strip()
@@ -334,7 +335,7 @@ def research_agent(request: SearchRequest):
             "nodes": get_mock_response(request.text)
         }
 
-    print(f"🤖 Agent ({request.persona}) activated for: {request.text}")
+    print(f"Agent ({request.persona}) activated for: {request.text}")
 
     try:
         # Define Persona Instructions
@@ -371,24 +372,48 @@ def research_agent(request: SearchRequest):
         """
 
         # 3. CALL GEMINI
-        model = genai.GenerativeModel('gemini-3-flash-preview')
-        response = model.generate_content(prompt)
+        research_model = genai.GenerativeModel('gemini-3-flash-preview')
+        response = research_model.generate_content(prompt)
 
-        # 4. CLEAN & PARSE
-        clean_text = response.text.replace(
+        # 4. CLEAN & PARSE with robust JSON extraction
+        clean_text = response.text.strip()
+
+        # Remove markdown code blocks
+        clean_text = clean_text.replace(
             "```json", "").replace("```", "").strip()
-        data = json.loads(clean_text)
 
-        data = json.loads(clean_text)
+        # Try to extract JSON if there's extra text
+        import re
+        json_match = re.search(r'\{[\s\S]*\}', clean_text)
+        if json_match:
+            clean_text = json_match.group(0)
+
+        try:
+            data = json.loads(clean_text)
+        except json.JSONDecodeError as e:
+            print(f"JSON Parse Error: {e}")
+            print(f"Raw response: {response.text[:500]}")
+            # Return a valid fallback structure
+            return {
+                "thoughts": ["⚠️ Could not parse AI response", f"Error: {str(e)}"],
+                "nodes": [{
+                    "id": "parse-error",
+                    "title": f"Parsing Error for {request.text}",
+                    "abstract": "The AI response could not be parsed. Using fallback data.",
+                    "group": request.persona.capitalize(),
+                    "val": 15
+                }]
+            }
 
         # 5. POST-PROCESS (The Fix: Force Unique IDs)
         if "nodes" in data:
-            for node in data["nodes"]:
+            for i, node in enumerate(data["nodes"]):
                 # FIX 1: Generate a unique ID from the title (removes spaces, lowers case)
                 # e.g. "Neural Networks" -> "neural-networks"
                 safe_id = node.get(
                     'title', 'unknown').lower().replace(" ", "-")
-                node['id'] = safe_id
+                # Add index to ensure uniqueness even if titles are similar
+                node['id'] = f"{safe_id}-{i}"
 
                 # FIX 2: Smart URLs (Scholar)
                 safe_title = urllib.parse.quote(node.get('title', ''))
