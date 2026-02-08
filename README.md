@@ -772,6 +772,3 @@ SOFTWARE.
 - **Issues**: [GitHub Issues](https://github.com/ashram15/MindMapAI/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/ashram15/MindMapAI/discussions)
 - **Email**: ashram1015@gmail.com
-
-
-# Railway deployment
