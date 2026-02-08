@@ -1,5 +1,5 @@
 # 🧠 MindMapAI
-<video src = "./MindMapAI_Demo.mp4" width = "320" height="240" controls></video>
+https://github.com/user-attachments/assets/7cd75444-cc5a-4963-aca6-bcb8a61a798a
 
 > **An AI-powered 3D knowledge graph visualization system that transforms Wikipedia data into an immersive, interactive learning experience**
 
