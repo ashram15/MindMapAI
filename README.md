@@ -48,7 +48,7 @@ MindMapAI is a cutting-edge full-stack application that combines high-performanc
   - 🔴 **Critic**: Identifies risks, challenges, and potential issues
   - 🟡 **Historian**: Provides historical context and evolutionary perspective
 - **Parallel Processing**: All agents work simultaneously for comprehensive coverage
-- **Gemini AI Integration**: Powered by Google's Gemini 2.0 Flash for intelligent analysis
+- **Gemini AI Integration**: Powered by Google's Gemini 3.0 Flash for intelligent analysis
 
 ### **High-Performance Vector Search**
 - **C++ Vector Engine**: Lightning-fast similarity search using optimized dot product calculations
