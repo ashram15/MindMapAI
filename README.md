@@ -89,7 +89,7 @@ flowchart TB
     end
 
     subgraph "AI Processing"
-        C["Gemini 2.0 Flash<br/>Google AI"]
+        C["Gemini 3.0 Flash<br/>Google AI"]
         D["Sentence Transformers<br/>all-MiniLM-L6-v2"]
         E1["Optimist Agent"]
         E2["Critic Agent"]
@@ -210,7 +210,7 @@ flowchart TB
 |------------|---------|---------|
 | **FastAPI** | Latest | High-performance async web framework |
 | **Sentence Transformers** | Latest | Text embedding generation |
-| **Google Generative AI** | Latest | Gemini 2.0 Flash integration |
+| **Google Generative AI** | Latest | Gemini 3.0 Flash integration |
 | **NumPy** | Latest | Numerical operations |
 | **Wikipedia** | Latest | Wikipedia API wrapper |
 | **python-dotenv** | Latest | Environment variable management |
