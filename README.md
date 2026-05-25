@@ -1,5 +1,7 @@
 # 🧠 MindMapAI
-https://github.com/user-attachments/assets/7cd75444-cc5a-4963-aca6-bcb8a61a798a
+https://github.com/user-attachments/assets/81557363-25f6-46ec-9361-b6fa669a538f
+
+
 
 > **An AI-powered 3D knowledge graph visualization system that transforms Wikipedia data into an immersive, interactive learning experience**
 
