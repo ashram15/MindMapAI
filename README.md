@@ -5,7 +5,7 @@ https://github.com/user-attachments/assets/81557363-25f6-46ec-9361-b6fa669a538f
 
 > **An AI-powered 3D knowledge graph visualization system that transforms Wikipedia data into an immersive, interactive learning experience**
 
-MindMapAI is a cutting-edge full-stack application that combines high-performance vector search, AI research agents, and stunning 3D visualizations to create a unique knowledge exploration platform. Built with a microservices architecture featuring a C++ vector engine, Python AI backend, and Next.js frontend.
+MindMapAI is a full-stack application that combines high-performance vector search, AI research agents, and stunning 3D visualizations to create a unique knowledge exploration platform. Built with a microservices architecture featuring a C++ vector engine, Python AI backend, and Next.js frontend.
 
 <p align="center">
   <img src="https://img.shields.io/badge/C++-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white" />
@@ -15,10 +15,9 @@ MindMapAI is a cutting-edge full-stack application that combines high-performanc
   <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
   <img src="https://img.shields.io/badge/Three.js-000000?style=for-the-badge&logo=three.js&logoColor=white" />
 </p>
+<!-- 
 
----
-
-## Table of Contents
+<!-- ## Table of Contents
 
 - [Features](#-features)
 - [Architecture](#-architecture)
@@ -69,7 +68,7 @@ MindMapAI is a cutting-edge full-stack application that combines high-performanc
 ## Architecture
 
 ```mermaid
-flowchart TB
+<!-- flowchart TB
     subgraph "Frontend Layer"
         A["Next.js 16 Frontend<br/>React 19 + Three.js"]
         A1["3D Force Graph<br/>Component"]
@@ -159,8 +158,8 @@ flowchart TB
     class F,F1,F2 engine
     class G,H,I data
     class J,K tools
-```
-
+``` -->
+<!-- 
 ### Component Communication Flow
 
 1. **User Input Flow**
@@ -359,7 +358,7 @@ npm run dev  # Runs on port 3000
 ### Data Pipeline
 
 ```mermaid
-flowchart LR
+<!-- flowchart LR
     A["Wikipedia API"] -->|"Download 2000 articles"| B["get_wiki_data.py"]
     B -->|"Save raw data"| C["data.json"]
     C -->|"Load articles"| D["create_embeddings.py"]
@@ -377,7 +376,7 @@ flowchart LR
     class A source
     class B,D,E,F process
     class C,G storage
-    class H,I runtime
+    class H,I runtime -->
 ```
 
 ### Search Algorithm
@@ -406,7 +405,7 @@ The vector search uses **cosine similarity** via normalized dot products:
 Each research agent follows this workflow:
 
 ```mermaid
-sequenceDiagram
+<!-- sequenceDiagram
     participant Frontend
     participant API
     participant Optimist
@@ -443,9 +442,9 @@ sequenceDiagram
     
     API-->>Frontend: Stream all results
     Frontend->>Frontend: Update 3D graph
-```
+``` -->
 
----
+<!-- ---
 
 ## 📡 API Documentation
 
@@ -690,7 +689,7 @@ cp vectors.bin ../cpp-engine/
 
 #### 5. **Frontend Shows Empty Graph**
 **Symptom**: 3D view renders but no nodes appear  
-**Solution**: Open browser console, check API responses. Verify backend is running.
+**Solution**: Open browser console, check API responses. Verify backend is running. --> -->
 
 <!-- ---
 
@@ -701,17 +700,17 @@ We welcome contributions! Here's how you can help:
 ### Areas for Improvement
 
 - [ ] Add more AI agent personas (e.g., Scientist, Journalist)
-- [ ] Implement graph export (PNG, SVG, JSON)
-- [ ] Add user authentication and saved graphs
+- [ ] Implement graph export (PNG, SVG, JSON) -->
+<!-- - [ ] Add user authentication and saved graphs
 - [ ] Create mobile-responsive UI
 - [ ] Add graph filtering and search
 - [ ] Implement auto-layout algorithms
 - [ ] Add dark/light theme toggle
 - [ ] Create tutorial/onboarding flow
 - [ ] Add unit and integration tests
-- [ ] Implement real-time collaboration -->
+<!-- - [ ] Implement real-time collaboration --> 
 
-### Pull Request Process
+<!-- ### Pull Request Process
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
@@ -723,11 +722,11 @@ We welcome contributions! Here's how you can help:
 ### Code Style
 
 - **Python**: Follow PEP 8
-- **TypeScript/JavaScript**: Use Prettier
-- **C++**: Follow Google C++ Style Guide
+- **TypeScript/JavaScript**: Use Prettier -->
+<!-- - **C++**: Follow Google C++ Style Guide -->
 
---- -->
 
+<!-- 
 ## License
 
 This project is licensed under the **MIT License** - see below for details:
