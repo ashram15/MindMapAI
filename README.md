@@ -15,9 +15,9 @@ MindMapAI is a full-stack application that combines high-performance vector sear
   <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
   <img src="https://img.shields.io/badge/Three.js-000000?style=for-the-badge&logo=three.js&logoColor=white" />
 </p>
-<!-- 
 
-<!-- ## Table of Contents
+<!--
+## Table of Contents
 
 - [Features](#-features)
 - [Architecture](#-architecture)
@@ -68,15 +68,15 @@ MindMapAI is a full-stack application that combines high-performance vector sear
 ## Architecture
 
 ```mermaid
-<!-- flowchart TB
+flowchart TB
     subgraph "Frontend Layer"
         A["Next.js 16 Frontend<br/>React 19 + Three.js"]
         A1["3D Force Graph<br/>Component"]
         A2["Search Interface"]
         A3["Terminal View"]
-        A --> A1
-        A --> A2
-        A --> A3
+        A -- > A1
+        A -- > A2
+        A -- > A3
     end
 
     subgraph "API Layer"
@@ -84,9 +84,9 @@ MindMapAI is a full-stack application that combines high-performance vector sear
         B1["Search Endpoint<br/>/search"]
         B2["Research Agent<br/>/research-agent"]
         B3["Image Analysis<br/>/analyze-image"]
-        B --> B1
-        B --> B2
-        B --> B3
+        B -- > B1
+        B -- > B2
+        B -- > B3
     end
 
     subgraph "AI Processing"
@@ -101,8 +101,8 @@ MindMapAI is a full-stack application that combines high-performance vector sear
         F["C++ Engine<br/>Port 8080"]
         F1["Vector Database<br/>vectors.bin"]
         F2["Binary Format<br/>float32 arrays"]
-        F --> F1
-        F1 --> F2
+        F -- > F1
+        F1 -- > F2
     end
 
     subgraph "Data Layer"
@@ -117,27 +117,27 @@ MindMapAI is a full-stack application that combines high-performance vector sear
     end
 
     %% Connection flows
-    A2 -->|"HTTP POST<br/>text query"| B1
-    A2 -->|"HTTP POST<br/>persona query"| B2
-    A3 -->|"HTTP POST<br/>base64 image"| B3
+    A2 -- >|"HTTP POST<br/>text query"| B1
+    A2 -- >|"HTTP POST<br/>persona query"| B2
+    A3 -- >|"HTTP POST<br/>base64 image"| B3
     
-    B1 -->|"Query Vector"| D
-    B2 -->|"Generate Insights"| C
-    B2 -->|"Parallel Requests"| E1
-    B2 -->|"Parallel Requests"| E2
-    B2 -->|"Parallel Requests"| E3
-    B3 -->|"Vision API"| C
+    B1 -- >|"Query Vector"| D
+    B2 -- >|"Generate Insights"| C
+    B2 -- >|"Parallel Requests"| E1
+    B2 -- >|"Parallel Requests"| E2
+    B2 -- >|"Parallel Requests"| E3
+    B3 -- >|"Vision API"| C
     
-    D -->|"384-dim Vector"| F
-    E1 -->|"Search Request"| F
-    E2 -->|"Search Request"| F
-    E3 -->|"Search Request"| F
+    D -- >|"384-dim Vector"| F
+    E1 -- >|"Search Request"| F
+    E2 -- >|"Search Request"| F
+    E3 -- >|"Search Request"| F
     
-    F -->|"Top-K Results<br/>IDs + Scores"| B
-    B -->|"Enriched Data"| H
-    B -->|"Thumbnail"| G
+    F -- >|"Top-K Results<br/>IDs + Scores"| B
+    B -- >|"Enriched Data"| H
+    B -- >|"Thumbnail"| G
     
-    B -->|"JSON Response"| A1
+    B -- >|"JSON Response"| A1
     
     J -.->|"Manages"| A
     J -.->|"Manages"| B
@@ -158,8 +158,8 @@ MindMapAI is a full-stack application that combines high-performance vector sear
     class F,F1,F2 engine
     class G,H,I data
     class J,K tools
-``` -->
-<!-- 
+``` -- >
+
 ### Component Communication Flow
 
 1. **User Input Flow**
@@ -358,15 +358,15 @@ npm run dev  # Runs on port 3000
 ### Data Pipeline
 
 ```mermaid
-<!-- flowchart LR
-    A["Wikipedia API"] -->|"Download 2000 articles"| B["get_wiki_data.py"]
-    B -->|"Save raw data"| C["data.json"]
-    C -->|"Load articles"| D["create_embeddings.py"]
-    D -->|"Generate embeddings"| E["Sentence Transformers<br/>all-MiniLM-L6-v2"]
-    E -->|"384-dim vectors"| F["Normalize L2"]
-    F -->|"Binary format"| G["vectors.bin"]
-    G -->|"Load on startup"| H["C++ Engine"]
-    C -->|"Load on startup"| I["Python API"]
+flowchart LR
+    A["Wikipedia API"] -- >|"Download 2000 articles"| B["get_wiki_data.py"]
+    B -- >|"Save raw data"| C["data.json"]
+    C -- >|"Load articles"| D["create_embeddings.py"]
+    D -- >|"Generate embeddings"| E["Sentence Transformers<br/>all-MiniLM-L6-v2"]
+    E -- >|"384-dim vectors"| F["Normalize L2"]
+    F -- >|"Binary format"| G["vectors.bin"]
+    G -- >|"Load on startup"| H["C++ Engine"]
+    C -- >|"Load on startup"| I["Python API"]
     
     classDef source fill:#ffcc00,stroke:#000,stroke-width:2px
     classDef process fill:#009688,stroke:#000,stroke-width:2px,color:#fff
@@ -376,7 +376,7 @@ npm run dev  # Runs on port 3000
     class A source
     class B,D,E,F process
     class C,G storage
-    class H,I runtime -->
+    class H,I runtime -- >
 ```
 
 ### Search Algorithm
@@ -405,7 +405,7 @@ The vector search uses **cosine similarity** via normalized dot products:
 Each research agent follows this workflow:
 
 ```mermaid
-<!-- sequenceDiagram
+sequenceDiagram
     participant Frontend
     participant API
     participant Optimist
@@ -423,28 +423,28 @@ Each research agent follows this workflow:
     end
     
     Optimist->>CPP: Vector search
-    CPP-->>Optimist: Top-5 results
+    CPP-- >>Optimist: Top-5 results
     Optimist->>Gemini: Generate positive insights
-    Gemini-->>Optimist: JSON response
-    Optimist-->>API: Enhanced results
+    Gemini-- >>Optimist: JSON response
+    Optimist-- >>API: Enhanced results
     
     Critic->>CPP: Vector search
-    CPP-->>Critic: Top-5 results
+    CPP-- >>Critic: Top-5 results
     Critic->>Gemini: Generate critical analysis
-    Gemini-->>Critic: JSON response
-    Critic-->>API: Enhanced results
+    Gemini-- >>Critic: JSON response
+    Critic-- >>API: Enhanced results
     
     Historian->>CPP: Vector search
-    CPP-->>Historian: Top-5 results
+    CPP-- >>Historian: Top-5 results
     Historian->>Gemini: Generate historical context
-    Gemini-->>Historian: JSON response
-    Historian-->>API: Enhanced results
+    Gemini-- >>Historian: JSON response
+    Historian-- >>API: Enhanced results
     
-    API-->>Frontend: Stream all results
+    API-- >>Frontend: Stream all results
     Frontend->>Frontend: Update 3D graph
-``` -->
+``` -- >
 
-<!-- ---
+---
 
 ## 📡 API Documentation
 
@@ -689,9 +689,9 @@ cp vectors.bin ../cpp-engine/
 
 #### 5. **Frontend Shows Empty Graph**
 **Symptom**: 3D view renders but no nodes appear  
-**Solution**: Open browser console, check API responses. Verify backend is running. --> -->
+**Solution**: Open browser console, check API responses. Verify backend is running. -- > -- >
 
-<!-- ---
+---
 
 ## Contributing
 
@@ -700,17 +700,17 @@ We welcome contributions! Here's how you can help:
 ### Areas for Improvement
 
 - [ ] Add more AI agent personas (e.g., Scientist, Journalist)
-- [ ] Implement graph export (PNG, SVG, JSON) -->
-<!-- - [ ] Add user authentication and saved graphs
+- [ ] Implement graph export (PNG, SVG, JSON) -- >
+- [ ] Add user authentication and saved graphs
 - [ ] Create mobile-responsive UI
 - [ ] Add graph filtering and search
 - [ ] Implement auto-layout algorithms
 - [ ] Add dark/light theme toggle
 - [ ] Create tutorial/onboarding flow
 - [ ] Add unit and integration tests
-<!-- - [ ] Implement real-time collaboration --> 
+- [ ] Implement real-time collaboration -- > 
 
-<!-- ### Pull Request Process
+### Pull Request Process
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
@@ -718,15 +718,15 @@ We welcome contributions! Here's how you can help:
 4. Commit with clear messages (`git commit -m 'Add: Amazing new feature'`)
 5. Push to your fork (`git push origin feature/AmazingFeature`)
 6. Open a Pull Request
-<!-- 
+
 ### Code Style
 
 - **Python**: Follow PEP 8
-- **TypeScript/JavaScript**: Use Prettier -->
-<!-- - **C++**: Follow Google C++ Style Guide -->
+- **TypeScript/JavaScript**: Use Prettier -- >
+- **C++**: Follow Google C++ Style Guide -- >
 
 
-<!-- 
+
 ## License
 
 This project is licensed under the **MIT License** - see below for details:
@@ -773,3 +773,4 @@ SOFTWARE.
 - **Issues**: [GitHub Issues](https://github.com/ashram15/MindMapAI/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/ashram15/MindMapAI/discussions)
 - **Email**: ashram1015@gmail.com
+-->
