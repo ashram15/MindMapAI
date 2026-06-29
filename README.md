@@ -67,7 +67,7 @@ MindMapAI is a full-stack application that combines high-performance vector sear
 ## Architecture
 
 ```mermaid
-flowchart TB
+<!-- flowchart TB
     subgraph "Frontend Layer"
         A["Next.js 16 Frontend<br/>React 19 + Three.js"]
         A1["3D Force Graph<br/>Component"]
@@ -157,7 +157,7 @@ flowchart TB
     class F,F1,F2 engine
     class G,H,I data
     class J,K tools
-```
+``` -->
 <!-- 
 ### Component Communication Flow
 
