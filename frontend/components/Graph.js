@@ -1,5 +1,8 @@
 'use client';
 
+/* Interactive 3D graph client that handles search, image analysis, node rendering,
+ and the on-screen agent terminal. */
+
 import { useState, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import SpriteText from 'three-spritetext';
@@ -72,8 +75,6 @@ export default function SearchGraph() {
 
         const personas = ['optimist', 'critic', 'historian'];
 
-        // --- 1. FIRE IN PARALLEL (The Swarm) ---
-        // We do NOT await all of them at once. We want them to stream in as they finish.
         personas.forEach(async (persona) => {
             try {
                 setAgentThoughts(prev => [...prev, `🚀 Deploying ${persona.toUpperCase()} Agent...`]);
@@ -187,8 +188,6 @@ export default function SearchGraph() {
     };
 
     const [showInstructions, setShowInstructions] = useState(true);
-
-    // ... (existing code)
 
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh', background: '#000011' }}>

@@ -1,3 +1,5 @@
+/* ESLint configuration that layers Next.js core-web-vitals and TypeScript rules with project-specific ignore patterns. */
+
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";

@@ -31,17 +31,3 @@ services:
           envVarKey: RENDER_EXTERNAL_URL
       - key: DEV_MODE
         value: false
-
-  # Next.js Frontend
-  - type: web
-    name: mindmap-frontend
-    env: docker
-    dockerfilePath: ./frontend/Dockerfile
-    dockerContext: ./frontend
-    plan: free
-    envVars:
-      - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: mindmap-python-api
-          envVarKey: RENDER_EXTERNAL_URL

@@ -1,3 +1,8 @@
+"""FastAPI backend that embeds user queries, 
+retrieves matching Wikipedia records from the C++ vector 
+engine, and falls back to Gemini-generated nodes when retrieval 
+confidence is low."""
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import urllib.parse
@@ -120,7 +125,7 @@ app.add_middleware(
 )
 
 
-# Health check endpoints for Railway
+# Health check endpoints
 @app.get("/")
 async def root():
     return {"status": "ok", "service": "python-api", "ready": model is not None}
@@ -153,7 +158,7 @@ def search(query: dict):
     print(f"Query: {user_text}")
 
     vector = model.encode(user_text)
-    vector = vector / np.linalg.norm(vector)
+    vector = vector / np.linalg.norm(vector)  # normalize vector
 
     cpp_results = []
     try:
@@ -258,13 +263,14 @@ def analyze_image(request: ImageRequest):
         1. Identify the MAIN SUBJECT of the image. This will be the first item.
         2. Identify 5 related sub-concepts or hidden details found in the image.
         
-        Return strictly a JSON list of objects.
+        CRITICAL: Return ONLY valid JSON with NO additional text or markdown.
+        Do NOT wrap in ```json or ``` blocks.
         For the first item (the Main Subject), the 'title' MUST be a specific, descriptive name of what is in the image (e.g., "Golden Retriever", "Eiffel Tower", "Sushi Platter"). Do NOT use generic names like "Image", "Photo", or "Main Topic".
 
         Format:
         [
             {"id": "main_topic", "title": "Descriptive Name", "abstract": "Description of the image", "group": "Gemini"},
-            {"id": "sub_1", "title": "Related Concept", "abstract": "...", "group": "Gemini"}
+            {"id": "sub_1", "title": "Related Concept", "abstract": "Brief description", "group": "Gemini"}
         ]
         """
 
@@ -273,7 +279,26 @@ def analyze_image(request: ImageRequest):
 
         text_response = response.text.replace(
             "```json", "").replace("```", "").strip()
-        nodes = json.loads(text_response)
+
+        # Try to extract JSON array
+        import re
+        array_match = re.search(r'\[[\s\S]*\]', text_response)
+        if array_match:
+            text_response = array_match.group(0)
+
+        try:
+            nodes = json.loads(text_response)
+        except json.JSONDecodeError as e:
+            print(f"❌ Image Analysis JSON Parse Error: {e}")
+            print(f"[DEBUG] Response: {response.text[:500]}")
+            # Return fallback
+            return [{
+                "id": "parse-error",
+                "title": "Image Analysis Error",
+                "abstract": "Could not parse AI response for image analysis",
+                "group": "Gemini",
+                "val": 15
+            }]
 
         for i, node in enumerate(nodes):
             if i == 0:
@@ -323,7 +348,7 @@ def research_agent(request: SearchRequest):
     4. Returns the 'Thought Process' + 'Final Graph'.
     """
 
-    # 1. DEV MODE (Keep this for free testing)
+    # 1. DEV MODE
     if DEV_MODE:
         return {
             "thoughts": [
@@ -357,7 +382,8 @@ def research_agent(request: SearchRequest):
         1. Identify 5 distinct key sub-concepts related to the topic FROM YOUR SPECIFIC PERSPECTIVE.
         2. Assign them a 'group' name corresponding to your persona ('Optimist', 'Critic', 'Historian').
         
-        RETURN ONLY RAW JSON.
+        CRITICAL: Return ONLY valid JSON with NO additional text, explanations, or markdown.
+        Do NOT wrap in ```json or ``` blocks.
         Format:
         {{
             "thoughts": [
@@ -365,8 +391,8 @@ def research_agent(request: SearchRequest):
                 "2. Identifying key angles..."
             ],
             "nodes": [
-                {{"id": "node1", "title": "Concept 1", "abstract": "...", "group": "{request.persona.capitalize()}", "val": 15}},
-                ...
+                {{"id": "node1", "title": "Concept 1", "abstract": "Brief description", "group": "{request.persona.capitalize()}", "val": 15}},
+                {{"id": "node2", "title": "Concept 2", "abstract": "Brief description", "group": "{request.persona.capitalize()}", "val": 15}}
             ]
         }}
         """
@@ -376,23 +402,35 @@ def research_agent(request: SearchRequest):
         response = research_model.generate_content(prompt)
 
         # 4. CLEAN & PARSE with robust JSON extraction
-        clean_text = response.text.strip()
+        raw_text = response.text.strip()
+        print(
+            f"[DEBUG] Raw Gemini response (first 200 chars): {raw_text[:200]}")
 
-        # Remove markdown code blocks
-        clean_text = clean_text.replace(
-            "```json", "").replace("```", "").strip()
+        # Strategy 1: Remove markdown code blocks
+        clean_text = raw_text.replace("```json", "").replace("```", "").strip()
 
-        # Try to extract JSON if there's extra text
+        # Strategy 2: Try to extract JSON object using multiple patterns
         import re
-        json_match = re.search(r'\{[\s\S]*\}', clean_text)
+
+        # Try to find outermost JSON object
+        json_match = re.search(
+            r'\{(?:[^{}]|(?:\{[^{}]*\}))*\}', clean_text, re.DOTALL)
         if json_match:
             clean_text = json_match.group(0)
+        else:
+            # Fallback: find anything between first { and last }
+            start = clean_text.find('{')
+            end = clean_text.rfind('}')
+            if start != -1 and end != -1 and end > start:
+                clean_text = clean_text[start:end+1]
+
+        print(f"[DEBUG] Cleaned JSON (first 200 chars): {clean_text[:200]}")
 
         try:
             data = json.loads(clean_text)
         except json.JSONDecodeError as e:
-            print(f"JSON Parse Error: {e}")
-            print(f"Raw response: {response.text[:500]}")
+            print(f"❌ JSON Parse Error: {e}")
+            print(f"[DEBUG] Full raw response:\n{raw_text}")
             # Return a valid fallback structure
             return {
                 "thoughts": ["⚠️ Could not parse AI response", f"Error: {str(e)}"],

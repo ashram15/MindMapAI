@@ -1,4 +1,8 @@
 #include "httplib.h"
+/* HTTP vector-search server that loads the binary embedding store, scores query vectors,
+and returns the top-K nearest Wikipedia document IDs. Real HTTP service version of engine.cpp
+with exposed endpoints like /search and /health*/
+
 #include "json.hpp"
 #include <algorithm>
 #include <cmath>
@@ -73,7 +77,7 @@ int main()
 
   httplib::Server svr;
 
-  // Health check endpoint for Railway
+  // Health check endpoints
   svr.Get("/", [](const httplib::Request &req, httplib::Response &res)
           { res.set_content("{\"status\":\"ok\",\"service\":\"cpp-engine\"}", "application/json"); });
 

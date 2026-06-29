@@ -1,9 +1,12 @@
+"""Send a sample vector-search request to the local C++ engine and 
+print the returned matches for manual smoke testing."""
+
 import requests
 import json
 import time
 
 # 1. Create a fake query vector with 384 zeros (matching your model)
-dummy_vector = [0.0] * 384 
+dummy_vector = [0.0] * 384
 
 url = "http://localhost:8080/search"
 payload = {
@@ -21,7 +24,7 @@ try:
     print(f"Time Taken: {(end-start)*1000:.2f} ms")
     print("Response from C++ Engine:")
     print(json.dumps(response.json(), indent=2))
-    
+
 except Exception as e:
     print(f"Error: {e}")
     print("Is the server running in a separate terminal?")

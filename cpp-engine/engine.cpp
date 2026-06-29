@@ -1,3 +1,7 @@
+/* Standalone engine file for local testing.
+Contains tests that loads `vectors.bin`, runs a sample similarity query,
+and prints search timing plus top matches. */
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -7,14 +11,17 @@
 
 using namespace std;
 
-struct VectorDatabase {
+struct VectorDatabase
+{
   int num_vectors;
   int vector_dim;
   vector<float> data;
 
-  bool load(const char *filename) {
+  bool load(const char *filename)
+  {
     FILE *f = fopen(filename, "rb");
-    if (!f) {
+    if (!f)
+    {
       cerr << "Error: Could not open " << filename << endl;
       return false;
     }
@@ -35,26 +42,33 @@ struct VectorDatabase {
   const float *get_vector(int i) const { return &data[i * vector_dim]; }
 
   // search logic
-  vector<pair<float, int>> search(const float *query_vec, int k) {
+  vector<pair<float, int>> search(const float *query_vec, int k)
+  {
     vector<pair<float, int>> results;
     results.reserve(num_vectors);
 
-    for (int i = 0; i < num_vectors; ++i) {
+    for (int i = 0; i < num_vectors; ++i)
+    {
       const float *target_vec = get_vector(i);
       float score = 0.0f;
 
-      // dot product
-      for (int j = 0; j < vector_dim; ++j) {
+      // dot product score of the normalized vectors
+      for (int j = 0; j < vector_dim; ++j)
+      {
         score += query_vec[j] * target_vec[j];
       }
 
       results.push_back({score, i});
     }
 
+    // sort the dot product scores in descending order
     sort(results.begin(), results.end(),
-         [](const auto &a, const auto &b) { return a.first > b.first; });
+         [](const auto &a, const auto &b)
+         { return a.first > b.first; });
 
-    if (results.size() > k) {
+    // we need top k values, so restrict size to k
+    if (results.size() > k)
+    {
       results.resize(k);
     }
 
@@ -62,10 +76,12 @@ struct VectorDatabase {
   }
 };
 
-int main() {
+int main()
+{
   VectorDatabase db;
 
-  if (!db.load("vectors.bin")) {
+  if (!db.load("vectors.bin"))
+  {
     cerr << "Failed to load vectors.bin" << endl;
     return 1;
   }
@@ -81,7 +97,8 @@ int main() {
   auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double, std::milli> elapsed = end - start;
 
-  for (int i = 0; i < results.size(); ++i) {
+  for (int i = 0; i < results.size(); ++i)
+  {
     std::cout << "Rank " << i + 1 << ": ID " << results[i].second
               << " | Score: " << results[i].first << std::endl;
   }

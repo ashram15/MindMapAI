@@ -207,6 +207,9 @@ flowchart TB
 ### 1. Search Request Flow
 
 ```mermaid
+---
+id: ffbfd92a-c2e9-4d77-a82d-9f10d27de6df
+---
 sequenceDiagram
     actor User
     participant Frontend
@@ -246,6 +249,9 @@ sequenceDiagram
 ### 2. Multi-Agent Research Flow
 
 ```mermaid
+---
+id: bd8003f5-4e2f-463a-8c71-df7328cd04af
+---
 sequenceDiagram
     participant Frontend
     participant API
@@ -297,11 +303,14 @@ sequenceDiagram
 ### 3. Image Analysis Flow
 
 ```mermaid
+---
+id: 726f9deb-0b5b-4b26-b115-d385d8f790dc
+---
 sequenceDiagram
     actor User
     participant Frontend
     participant API
-    participant Gemini Vision
+    participant GeminiVision
     participant VectorSearch
     participant Graph
 
@@ -309,9 +318,9 @@ sequenceDiagram
     Frontend->>Frontend: Convert to base64
     Frontend->>API: POST /analyze-image { image_base64 }
     
-    API->>Gemini Vision: Analyze image content
-    Note over Gemini Vision: "Extract key concepts,<br/>objects, themes"
-    Gemini Vision-->>API: Detected concepts []
+    API->>GeminiVision: Analyze image content
+    Note over GeminiVision: "Extract key concepts,<br/>objects, themes"
+    GeminiVision-->>API: Detected concepts []
     
     loop For each concept
         API->>VectorSearch: Search for related articles

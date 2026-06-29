@@ -1,3 +1,6 @@
+"""Stream Wikipedia articles and extract titles, abstracts, and URLs into 
+`data.json` for later embedding generation and search hydration."""
+
 from datasets import load_dataset
 import json
 
@@ -5,7 +8,8 @@ OUTPUT_FILE = "data.json"
 MAX_ARTICLES = 2000
 
 print("Streaming Wikipedia (this allows us to download only what we need)...")
-ds = load_dataset("wikimedia/wikipedia", "20231101.en", split="train", streaming=True)
+ds = load_dataset("wikimedia/wikipedia", "20231101.en",
+                  split="train", streaming=True)
 
 data = []
 print("Fetching articles...")
