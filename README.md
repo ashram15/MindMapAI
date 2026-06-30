@@ -40,33 +40,54 @@ Solving this problem was the main motivation behind MindMapAI.
 - Autonomous deep exploration of related topics
 
 ## Usage 
-<!-- Upload a photo of a real useful output of MindMap AI - examine use cases etc. 
-Image upload flow 
-Text query  -->
+
+### 1. Standard Knowledge Search 
+Type any topic into the text search bar and MindMapAI generates a 3D graph of the most semantically related Wikipedia articles, ranked by cosine similarity (dot product calculation).
+`[Screenshot/GIF: search query → graph rendering]`
+
+### 2. Out-of-database Topics (Google Gemini Fallback)
+If a query isn't well-represented in the vector database, MindMapAI automatically queries Gemini to surface relevant information and related topic nodes before falling back to vector search — so results stay relevant even for niche or recent topics.
+`[Screenshot/GIF: example of a fallback query]`
+
+### 3. Multi-Agent Research Mode 
+Activate Optimist, Critic, and Historian agents to explore a topic from three perspectives simultaneously. Each agent runs its own Gemini-prompted analysis and surfaces its own top-5 related nodes, letting you see a topic's opportunities, risks, and historical context side-by-side on the graph.
+`[Screenshot/GIF: multi-agent graph output]`
+
+### 4. Image-Based Exploration 
+Upload an image and MindMapAI extracts key concepts using Gemini, then runs a vector search for each concept to find related articles. Results are deduplicated, ranked, and rendered directly into the graph.
+`[Screenshot/GIF: image upload → resulting graph]`
+
+## Architecture Overview 
+User → Next.js Frontend → Python API (FastAPI)
+                              ├─→ C++ Vector Engine (similarity search)
+                              ├─→ Gemini API (research agent personas + fallback)
+                              ├─→ HuggingFace - Sentence Transformers (embeddings)
+                              └─→ Wikipedia API (data source)
+
 
 ## Technology Stack
 
 ### **Frontend**
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Next.js** | 16.1.5 | React framework with server-side rendering |
-| **React** | 19.2.3 | UI component library |
-| **Three.js** | 0.182.0 | 3D rendering engine |
-| **react-force-graph-3d** | 1.29.0 | Force-directed 3D graph visualization |
-| **three-spritetext** | 1.10.0 | 3D text labels |
-| **TailwindCSS** | 4.x | Utility-first CSS framework |
-| **TypeScript** | 5.x | Type-safe JavaScript |
+| Technology | Purpose |
+|------------|---------|
+| **Next.js** | React framework with server-side rendering |
+| **React** | UI component library |
+| **Three.js** | 3D rendering engine |
+| **react-force-graph-3d** | Force-directed 3D graph visualization |
+| **three-spritetext** | 3D text labels |
+| **TailwindCSS** | Utility-first CSS framework |
+| **TypeScript** | Type-safe JavaScript |
 
 ### **Backend (Python API)**
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **FastAPI** | Latest | High-performance async web framework |
-| **Sentence Transformers** | Latest | Text embedding generation |
-| **Google Generative AI** | Latest | Gemini 3.0 Flash integration |
-| **NumPy** | Latest | Numerical operations |
-| **Wikipedia** | Latest | Wikipedia API wrapper |
-| **python-dotenv** | Latest | Environment variable management |
-| **Pydantic** | Latest | Data validation |
+| Technology | Purpose |
+|------------|---------|
+| **FastAPI** | High-performance async web framework |
+| **Sentence Transformers** | Text embedding generation |
+| **Google Generative AI** | Gemini 3.0 Flash integration |
+| **NumPy** | Numerical operations |
+| **Wikipedia** | Wikipedia API wrapper |
+| **python-dotenv** | Environment variable management |
+| **Pydantic** | Data validation |
 
 ### **Vector Engine (C++)**
 | Technology | Purpose |
@@ -81,6 +102,43 @@ Text query  -->
 |------------|---------|
 | **Docker** | Containerization |
 | **Docker Compose** | Multi-container orchestration |
+
+
+## Sequence Diagram - How it works   
+sequenceDiagram
+    actor User
+    participant Frontend
+    participant Python-API
+    participant Embedder
+    participant Vector-Engine 
+    participant Vector-File
+    participant Metadata
+
+    User->>Frontend: Enter search query
+    Frontend->>Python-API: POST /search { text, k }
+    
+    Python-API->>Embedder: Encode text
+    Embedder-->>Python-API: 384-dim vector (normalized)
+    
+    Python-API->>Vector-Engine: POST /search { query_vector }
+    Vector-Engine->>Vector-File: Load vectors
+    Vector-File-->>Vector-Engine: Vector array
+    
+    loop For each vector
+        Vector-Engine->>Vector-Engine: Calculate dot product
+    end
+    
+    Vector-Engine->>Vector-Engine: Sort by similarity
+    Vector-Engine-->>Python-API: Top-K results [ID, score]
+    
+    loop For each result
+        Python-API->>Metadata: Get article by ID
+        Metadata-->>Python-API: {title, abstract, url}
+    end
+    
+    Python-API-->>Frontend: JSON results with metadata
+    Frontend->>Frontend: Render 3D nodes
+    Frontend-->>User: Display knowledge graph
 
 ## How to run the app locally
 
@@ -120,3 +178,4 @@ Text query  -->
    - Python API: [http://localhost:8000](http://localhost:8000)
    - C++ Engine: [http://localhost:8080](http://localhost:8080)
 
+## Challenges Faced 

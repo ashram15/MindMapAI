@@ -13,10 +13,21 @@ const ForceGraph3D = dynamic(() => import('react-force-graph-3d'), { ssr: false 
 // API URL from environment variable, fallback to localhost for development
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
+const formatNodeLabel = (label) => {
+    if (!label) return '';
+
+    const words = label.split(' ');
+    if (words.length <= 2 || label.length <= 18) return label;
+
+    const splitIndex = Math.ceil(words.length / 2);
+    return `${words.slice(0, splitIndex).join(' ')}\n${words.slice(splitIndex).join(' ')}`;
+};
+
 export default function SearchGraph() {
     const [graphData, setGraphData] = useState({ nodes: [], links: [] });
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedNode, setSelectedNode] = useState(null);
+    const [pendingResearchNode, setPendingResearchNode] = useState(null);
     const [agentThoughts, setAgentThoughts] = useState([]);
     const [isAutoPilot, setIsAutoPilot] = useState(false);
     const [isTerminalOpen, setIsTerminalOpen] = useState(false);
@@ -25,14 +36,21 @@ export default function SearchGraph() {
 
     const materialCache = useRef({});
     const geometryRef = useRef();
+    const ringGeometryRef = useRef();
 
     // Initialize geometry once
     if (!geometryRef.current) {
         geometryRef.current = new THREE.SphereGeometry(1, 32, 32);
     }
 
+    if (!ringGeometryRef.current) {
+        ringGeometryRef.current = new THREE.TorusGeometry(4, 0.25, 12, 48);
+    }
+
     const nodeThreeObject = useCallback(node => {
         const radius = Math.pow(node.val || 1, 1 / 3) * 4;
+        const isMainNode = node.val >= 20;
+        const isSelected = selectedNode && node.id === selectedNode.id;
 
         if (!materialCache.current[node.color]) {
             materialCache.current[node.color] = new THREE.MeshPhysicalMaterial({
@@ -50,19 +68,32 @@ export default function SearchGraph() {
         const sphere = new THREE.Mesh(geometryRef.current, material);
         sphere.scale.setScalar(radius);
 
-        if (selectedNode && node.id === selectedNode.id) {
-            const sprite = new SpriteText(node.name);
-            sprite.color = 'white';
-            sprite.textHeight = 8;
-            sprite.position.y = radius + 4;
+        const sprite = new SpriteText(formatNodeLabel(node.name));
+        sprite.color = isSelected || isMainNode ? '#ffffff' : '#d7f0ff';
+        sprite.textHeight = isSelected || isMainNode ? 6 : 4;
+        sprite.backgroundColor = 'rgba(0, 0, 0, 0.55)';
+        sprite.padding = 2.5;
+        sprite.borderRadius = 4;
+        sprite.position.y = radius + (isSelected || isMainNode ? 4.5 : 3.5);
+        sprite.material.depthWrite = false;
+        sprite.material.transparent = true;
+        sprite.material.opacity = isSelected || isMainNode ? 1 : 0.9;
 
-            const group = new THREE.Group();
-            group.add(sphere);
-            group.add(sprite);
-            return group;
+        const group = new THREE.Group();
+        group.add(sphere);
+        group.add(sprite);
+
+        if (isSelected) {
+            const ring = new THREE.Mesh(
+                ringGeometryRef.current,
+                new THREE.MeshBasicMaterial({ color: '#00ccff', transparent: true, opacity: 0.5 })
+            );
+            ring.rotation.x = Math.PI / 2;
+            ring.scale.setScalar(radius * 0.28);
+            group.add(ring);
         }
 
-        return sphere;
+        return group;
     }, [selectedNode]);
 
     const performSearch = useCallback(async (query, sourceNodeId = null, depth = 0) => {
@@ -111,7 +142,7 @@ export default function SearchGraph() {
             }
         });
 
-    }, [isAutoPilot]);
+    }, []);
 
     const handleImageUpload = async (event) => {
         const file = event.target.files[0];
@@ -219,8 +250,8 @@ export default function SearchGraph() {
                         </p>
 
                         <div style={{ textAlign: 'left', background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '8px', borderLeft: '2px solid #00ccff' }}>
-                            <p style={{ margin: '8px 0', fontSize: '0.9rem', color: '#ccc' }}><strong style={{ color: 'white' }}>TEXT MODE</strong> &nbsp;—&nbsp; Hover over "TEXT" to generate a research graph.</p>
-                            <p style={{ margin: '8px 0', fontSize: '0.9rem', color: '#ccc' }}><strong style={{ color: 'white' }}>IMAGE MODE</strong> &nbsp;—&nbsp; Click "IMAGE" to analyze visual data.</p>
+                            <p style={{ margin: '8px 0', fontSize: '0.9rem', color: '#ccc' }}><strong style={{ color: 'white' }}>TEXT MODE</strong> &nbsp;—&nbsp; Hover over {'"TEXT"'} to generate a research graph.</p>
+                            <p style={{ margin: '8px 0', fontSize: '0.9rem', color: '#ccc' }}><strong style={{ color: 'white' }}>IMAGE MODE</strong> &nbsp;—&nbsp; Click {'"IMAGE"'} to analyze visual data.</p>
                         </div>
 
                         <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
@@ -430,10 +461,58 @@ export default function SearchGraph() {
                     <div style={{ padding: '20px' }}>
                         {/* If no image, show close button here */}
                         {!nodeImage && (
-                            <button onClick={() => setSelectedNode(null)} style={{ float: 'right', background: 'transparent', border: 'none', color: '#666' }}>✕</button>
+                            <button onClick={() => { setSelectedNode(null); setPendingResearchNode(null); }} style={{ float: 'right', background: 'transparent', border: 'none', color: '#666' }}>✕</button>
                         )}
 
                         <h2 style={{ marginTop: 0, color: selectedNode.color }}>{selectedNode.name}</h2>
+
+                        {pendingResearchNode && pendingResearchNode.id === selectedNode.id && (
+                            <div style={{
+                                marginBottom: '16px',
+                                padding: '14px',
+                                border: '1px solid rgba(0,204,255,0.25)',
+                                borderRadius: '8px',
+                                background: 'rgba(0,204,255,0.08)'
+                            }}>
+                                <p style={{ margin: '0 0 12px 0', lineHeight: '1.5', fontSize: '0.9rem', color: '#d8f7ff' }}>
+                                    Research this node now, or keep the current map as-is?
+                                </p>
+
+                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                    <button
+                                        onClick={() => {
+                                            setPendingResearchNode(null);
+                                            performSearch(selectedNode.name, selectedNode.id);
+                                        }}
+                                        style={{
+                                            padding: '8px 14px',
+                                            borderRadius: '5px',
+                                            border: '1px solid #00ccff',
+                                            background: '#00ccff',
+                                            color: '#000011',
+                                            fontWeight: 'bold',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Research this node
+                                    </button>
+
+                                    <button
+                                        onClick={() => setPendingResearchNode(null)}
+                                        style={{
+                                            padding: '8px 14px',
+                                            borderRadius: '5px',
+                                            border: '1px solid rgba(255,255,255,0.2)',
+                                            background: 'transparent',
+                                            color: '#ddd',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Keep map as is
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Your Existing Summary */}
                         <p style={{ lineHeight: '1.6', fontSize: '0.9rem', color: '#ddd' }}>
@@ -538,7 +617,10 @@ export default function SearchGraph() {
                 backgroundColor="#000011"
                 linkOpacity={0.2}
                 nodeResolution={16}
-                onBackgroundClick={() => setSelectedNode(null)}
+                onBackgroundClick={() => {
+                    setSelectedNode(null);
+                    setPendingResearchNode(null);
+                }}
                 nodeThreeObjectExtend={false}
                 nodeThreeObject={nodeThreeObject}
 
@@ -582,6 +664,13 @@ export default function SearchGraph() {
 
                     // 4. Auto-Pilot Check (Keep existing)
                     if (!isAutoPilot) {
+                        const hasExistingMap = graphData.nodes.length > 0;
+
+                        if (hasExistingMap) {
+                            setPendingResearchNode(node);
+                            return;
+                        }
+
                         performSearch(node.name, node.id);
                     }
                 }}

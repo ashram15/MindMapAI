@@ -213,35 +213,35 @@ id: ffbfd92a-c2e9-4d77-a82d-9f10d27de6df
 sequenceDiagram
     actor User
     participant Frontend
-    participant API
+    participant Python-API
     participant Embedder
-    participant CPP
-    participant VectorDB
+    participant Vector-Engine 
+    participant Vector-File
     participant Metadata
 
     User->>Frontend: Enter search query
-    Frontend->>API: POST /search { text, k }
+    Frontend->>Python-API: POST /search { text, k }
     
-    API->>Embedder: Encode text
-    Embedder-->>API: 384-dim vector (normalized)
+    Python-API->>Embedder: Encode text
+    Embedder-->>Python-API: 384-dim vector (normalized)
     
-    API->>CPP: POST /search { query_vector }
-    CPP->>VectorDB: Load vectors
-    VectorDB-->>CPP: Vector array
+    Python-API->>Vector-Engine: POST /search { query_vector }
+    Vector-Engine->>Vector-File: Load vectors
+    Vector-File-->>Vector-Engine: Vector array
     
     loop For each vector
-        CPP->>CPP: Calculate dot product
+        Vector-Engine->>Vector-Engine: Calculate dot product
     end
     
-    CPP->>CPP: Sort by similarity
-    CPP-->>API: Top-K results [ID, score]
+    Vector-Engine->>Vector-Engine: Sort by similarity
+    Vector-Engine-->>Python-API: Top-K results [ID, score]
     
     loop For each result
-        API->>Metadata: Get article by ID
-        Metadata-->>API: {title, abstract, url}
+        Python-API->>Metadata: Get article by ID
+        Metadata-->>Python-API: {title, abstract, url}
     end
     
-    API-->>Frontend: JSON results with metadata
+    Python-API-->>Frontend: JSON results with metadata
     Frontend->>Frontend: Render 3D nodes
     Frontend-->>User: Display knowledge graph
 ```
