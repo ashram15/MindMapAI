@@ -143,17 +143,22 @@ sequenceDiagram
 
 ## Challenges and Learnings  
 ### Cross-Container Networking with Docker Compose
-Docker was added late in development to streamline the deployment process. 
-During local development, services communicated via hardcoded localhost URLs 
-(frontend: `localhost:3000`, backend: `localhost:8000`, C++ engine: 
-`localhost:8080`), which caused CORS issues and failed connections between 
-services. Moving to Docker Compose required replacing localhost references 
-with Docker internal service names, since containers can't reach each other 
-via localhost, each runs in its own network namespace.
+Docker networking behaves differently depending on *where* the request 
+originates. Server-to-server calls (Python API → C++ engine) use Docker's 
+internal Domain Name Service (DNS), so the Python API reaches the C++ engine via 
+`http://cpp_engine:8080`, the service name defined in `docker-compose.yml` 
+resolves automatically within the Docker network.
+
+However, frontend API calls use `localhost:8000` because Next.js data 
+fetching that runs in the browser executes outside the Docker network entirely.
+Instead, it goes through the host machine, which reaches the container via the 
+exposed port mapping. This distinction between browser-originated and 
+server-originated requests was a key debugging insight when connections 
+weren't resolving as expected.
 
 ### Choosing Deployment Environments
 Deploying three microservices meant no single platform could host everything. 
-Vercel was ideal for the Next.js frontend (optimized for static/SSR), but 
+Vercel was ideal for the Next.js frontend (optimized for static site rendering (SSR)), but 
 couldn't host the Python API or C++ engine. The backend was deployed on 
 Render after testing Railway, with the main constraint being free tier file 
 size limits.
