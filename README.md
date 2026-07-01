@@ -43,11 +43,11 @@ Solving this problem was the main motivation behind MindMapAI.
 
 ### 1. Standard Knowledge Search 
 Type any topic into the text search bar and MindMapAI generates a 3D graph of the most semantically related Wikipedia articles, ranked by cosine similarity (dot product calculation).
-![alt text](image.png)
+![alt text](usage_assets/image.png)
 
 ### 2. Out-of-database Topics (Google Gemini Fallback)
 If a query isn't well-represented in the vector database, MindMapAI automatically queries Gemini to surface relevant information and related topic nodes before falling back to vector search — so results stay relevant even for niche or recent topics.
-![alt text](image-1.png)
+![alt text](usage_assets/image-1.png)
 
 ### 3. Multi-Agent Research Mode 
 Activate Optimist, Critic, and Historian agents to explore a topic from three perspectives simultaneously. Each agent runs its own Gemini-prompted analysis and surfaces its own top-5 related nodes, letting you see a topic's opportunities, risks, and historical context side-by-side on the graph.
