@@ -84,8 +84,8 @@ User → Next.js Frontend → Python API (FastAPI)
 |------------|---------|
 | **FastAPI** | High-performance async web framework |
 | **Sentence Transformers** | Text embedding generation |
-| **Google Generative AI** | Gemini 3.0 Flash Preview integration |
-| **NumPy** | Dot Product operations |
+| **Google Generative AI** | Gemini 3 Flash Preview integration |
+| **NumPy** | Numerical Operations |
 | **Wikipedia** | Wikipedia API wrapper |
 
 ### **Vector Engine (C++)**
@@ -146,21 +146,21 @@ sequenceDiagram
 Docker networking behaves differently depending on *where* the request 
 originates. Server-to-server calls (Python API → C++ engine) use Docker's 
 internal Domain Name Service (DNS), so the Python API reaches the C++ engine via 
-`http://cpp_engine:8080`, the service name defined in `docker-compose.yml` 
+`http://cpp_engine:8080`, the service name defined in `docker-compose.yml`, and
 resolves automatically within the Docker network.
 
-However, frontend API calls use `localhost:8000` because Next.js data 
-fetching that runs in the browser executes outside the Docker network entirely.
-Instead, it goes through the host machine, which reaches the container via the 
+However, frontend API calls (client side Next.js code) use `localhost:8000` because they are made from the browser and 
+execute outside the Docker network entirely.
+Instead, these requests go through the host machine, which reaches the Docker container via the 
 exposed port mapping. This distinction between browser-originated and 
 server-originated requests was a key debugging insight when connections 
 weren't resolving as expected.
 
 ### Choosing Deployment Environments
 Deploying three microservices meant no single platform could host everything. 
-Vercel was ideal for the Next.js frontend (optimized for static site rendering (SSR)), but 
-couldn't host the Python API or C++ engine. The backend was deployed on 
-Render after testing Railway, with the main constraint being free tier file 
+Vercel was ideal for the Next.js frontend (optimized for server side rendering (SSR)), but 
+couldn't host the Python API or C++ engine, as they required general-purpose backend infrastructure. 
+The backend was deployed on Render after testing Railway, with the main constraint being free tier file 
 size limits.
 The `vectors.bin` file for the C++ engine had to be reduced to 
 fit within platform limits, which meant limiting the size of the vector 
@@ -169,8 +169,7 @@ To stay within these limits, the vector file was intentionally restricted:
 the app streams the Wikimedia dataset, caps at 2,000 articles, skips 
 short pages, and stores only each article's title plus the first 400 
 characters as the abstract. Embeddings are stored as float32 in a compact 
-binary format (`vectors.bin`), resulting in a 2,000 × 384 matrix (~3MB 
-total), well within bounds of free tier file size limits. 
+binary format (`vectors.bin`), resulting in a 2,000 × 384 matrix (~3MB total), well within bounds of free tier file size limits. 
 `vectors.bin` is also treated as a generated artifact in `.gitignore` and reproduced from `data.json` at build time rather than shipped in the repo.
 
 ### Optimizing API Calls
