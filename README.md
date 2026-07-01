@@ -4,7 +4,7 @@ https://github.com/user-attachments/assets/81557363-25f6-46ec-9361-b6fa669a538f
 
 > **An AI-powered 3D knowledge graph visualization system that transforms Wikipedia data into an immersive, interactive learning experience**
 
-MindMapAI is a full-stack application that combines high-performance vector search, AI research agents, and stunning 3D visualizations to create a unique knowledge exploration platform. Built with a microservices architecture featuring a C++ vector engine, Python AI backend, and Next.js frontend.
+MindMapAI is a full-stack application that combines high-performance vector search, AI research agents, and 3D visualizations to create a unique knowledge exploration platform. Built with a microservices architecture featuring a C++ vector engine, Python AI backend, and Next.js frontend.
 
 <p align="center">
   <img src="https://img.shields.io/badge/C++-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white" />
@@ -16,12 +16,12 @@ MindMapAI is a full-stack application that combines high-performance vector sear
 
 </p>
 
-## Goal
-Have you ever been so deep into research where you forget the main question you started with? When building and designing MindMapAI, I thought about
-a way to solve this issue. What if all my research wasn't just multiple open tabs on my laptop, but instead a MindMap of related nodes, where I could jump through
-topics and visualize their relations all at once, without having to search through tabs.
-
-Solving this problem was the main motivation behind MindMapAI.
+## Motivation 
+Deep research sessions often end the same way: dozens of open tabs, no clear 
+sense of how ideas connect, and the original question buried somewhere in the 
+middle. MindMapAI replaces that chaos with a navigable 3D knowledge graph, where 
+instead of jumping between tabs, you explore relationships between ideas 
+visually, in one place.
 
 ## Features 
 ### **Multi-Agent Research System**
@@ -36,8 +36,7 @@ Solving this problem was the main motivation behind MindMapAI.
 
 ### **Image Analysis**
 - Upload images to extract concepts and generate related knowledge graphs
-### **Auto-Pilot Mode**
-- Autonomous deep exploration of related topics
+
 
 ## Usage 
 
@@ -85,11 +84,9 @@ User → Next.js Frontend → Python API (FastAPI)
 |------------|---------|
 | **FastAPI** | High-performance async web framework |
 | **Sentence Transformers** | Text embedding generation |
-| **Google Generative AI** | Gemini 3.0 Flash integration |
-| **NumPy** | Numerical operations |
+| **Google Generative AI** | Gemini 3.0 Flash Preview integration |
+| **NumPy** | Dot Product operations |
 | **Wikipedia** | Wikipedia API wrapper |
-| **python-dotenv** | Environment variable management |
-| **Pydantic** | Data validation |
 
 ### **Vector Engine (C++)**
 | Technology | Purpose |
@@ -97,7 +94,6 @@ User → Next.js Frontend → Python API (FastAPI)
 | **C++17** | High-performance vector operations |
 | **cpp-httplib** | HTTP server library |
 | **nlohmann/json** | JSON parsing |
-| **STL** | Vector and algorithm implementations |
 
 ### **Infrastructure**
 | Technology | Purpose |
@@ -145,6 +141,52 @@ sequenceDiagram
     Frontend-->>User: Display knowledge graph
 ```
 
+## Challenges and Learnings  
+### Cross-Container Networking with Docker Compose
+Docker was added late in development to streamline the deployment process. 
+During local development, services communicated via hardcoded localhost URLs 
+(frontend: `localhost:3000`, backend: `localhost:8000`, C++ engine: 
+`localhost:8080`), which caused CORS issues and failed connections between 
+services. Moving to Docker Compose required replacing localhost references 
+with Docker internal service names, since containers can't reach each other 
+via localhost, each runs in its own network namespace.
+
+### Choosing Deployment Environments
+Deploying three microservices meant no single platform could host everything. 
+Vercel was ideal for the Next.js frontend (optimized for static/SSR), but 
+couldn't host the Python API or C++ engine. The backend was deployed on 
+Render after testing Railway, with the main constraint being free tier file 
+size limits.
+The `vectors.bin` file for the C++ engine had to be reduced to 
+fit within platform limits, which meant limiting the size of the vector 
+database. 
+To stay within these limits, the vector file was intentionally restricted: 
+the app streams the Wikimedia dataset, caps at 2,000 articles, skips 
+short pages, and stores only each article's title plus the first 400 
+characters as the abstract. Embeddings are stored as float32 in a compact 
+binary format (`vectors.bin`), resulting in a 2,000 × 384 matrix (~3MB 
+total), well within bounds of free tier file size limits. 
+`vectors.bin` is also treated as a generated artifact in `.gitignore` and reproduced from `data.json` at build time rather than shipped in the repo.
+
+### Optimizing API Calls
+To avoid hitting Gemini API rate limits during development, a dev mode flag 
+was implemented to return mock data instead of making real API calls. This 
+significantly sped up debugging cycles for the multi-agent research flow.
+
+### C++ and Python API Integration
+The main integration challenge was JSON formatting mismatches between the 
+C++ HTTP server responses and what the FastAPI backend expected. Aligning 
+serialization formats across both services required careful debugging of 
+request/response payloads.
+
+### Concurrency and the Need for C++
+Python's Global Interpreter Lock (GIL) prevents true parallelism for 
+CPU-intensive work, making it a poor fit for looping dot product calculations 
+over thousands of vectors. Offloading the similarity search to a separate C++ 
+microservice eliminated this bottleneck, enabling native parallelism and lower 
+latency at search time.
+
+
 ## How to run the app locally
 
 ### Prerequisites
@@ -183,4 +225,4 @@ sequenceDiagram
    - Python API: [http://localhost:8000](http://localhost:8000)
    - C++ Engine: [http://localhost:8080](http://localhost:8080)
 
-## Challenges Faced 
+
