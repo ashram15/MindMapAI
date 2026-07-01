@@ -43,11 +43,11 @@ Solving this problem was the main motivation behind MindMapAI.
 
 ### 1. Standard Knowledge Search 
 Type any topic into the text search bar and MindMapAI generates a 3D graph of the most semantically related Wikipedia articles, ranked by cosine similarity (dot product calculation).
-`[Screenshot/GIF: search query → graph rendering]`
+![alt text](image.png)
 
 ### 2. Out-of-database Topics (Google Gemini Fallback)
 If a query isn't well-represented in the vector database, MindMapAI automatically queries Gemini to surface relevant information and related topic nodes before falling back to vector search — so results stay relevant even for niche or recent topics.
-`[Screenshot/GIF: example of a fallback query]`
+![alt text](image-1.png)
 
 ### 3. Multi-Agent Research Mode 
 Activate Optimist, Critic, and Historian agents to explore a topic from three perspectives simultaneously. Each agent runs its own Gemini-prompted analysis and surfaces its own top-5 related nodes, letting you see a topic's opportunities, risks, and historical context side-by-side on the graph.
@@ -58,11 +58,13 @@ Upload an image and MindMapAI extracts key concepts using Gemini, then runs a ve
 `[Screenshot/GIF: image upload → resulting graph]`
 
 ## Architecture Overview 
+```text
 User → Next.js Frontend → Python API (FastAPI)
                               ├─→ C++ Vector Engine (similarity search)
                               ├─→ Gemini API (research agent personas + fallback)
                               ├─→ HuggingFace - Sentence Transformers (embeddings)
                               └─→ Wikipedia API (data source)
+```
 
 
 ## Technology Stack
@@ -105,40 +107,43 @@ User → Next.js Frontend → Python API (FastAPI)
 
 
 ## Sequence Diagram - How it works   
+
+```mermaid
 sequenceDiagram
-    actor User
-    participant Frontend
-    participant Python-API
-    participant Embedder
-    participant Vector-Engine 
-    participant Vector-File
-    participant Metadata
+   actor User
+   participant Frontend
+   participant PythonAPI as Python-API
+   participant Embedder
+   participant VectorEngine as Vector-Engine
+   participant VectorFile as Vector-File
+   participant Metadata
 
     User->>Frontend: Enter search query
-    Frontend->>Python-API: POST /search { text, k }
+   Frontend->>PythonAPI: POST /search { text, k }
     
-    Python-API->>Embedder: Encode text
-    Embedder-->>Python-API: 384-dim vector (normalized)
+   PythonAPI->>Embedder: Encode text
+   Embedder-->>PythonAPI: 384-dim vector (normalized)
     
-    Python-API->>Vector-Engine: POST /search { query_vector }
-    Vector-Engine->>Vector-File: Load vectors
-    Vector-File-->>Vector-Engine: Vector array
+   PythonAPI->>VectorEngine: POST /search { query_vector }
+   VectorEngine->>VectorFile: Load vectors
+   VectorFile-->>VectorEngine: Vector array
     
     loop For each vector
-        Vector-Engine->>Vector-Engine: Calculate dot product
+      VectorEngine->>VectorEngine: Calculate dot product
     end
     
-    Vector-Engine->>Vector-Engine: Sort by similarity
-    Vector-Engine-->>Python-API: Top-K results [ID, score]
+   VectorEngine->>VectorEngine: Sort by similarity
+   VectorEngine-->>PythonAPI: Top-K results [ID, score]
     
     loop For each result
-        Python-API->>Metadata: Get article by ID
-        Metadata-->>Python-API: {title, abstract, url}
+      PythonAPI->>Metadata: Get article by ID
+      Metadata-->>PythonAPI: {title, abstract, url}
     end
     
-    Python-API-->>Frontend: JSON results with metadata
+   PythonAPI-->>Frontend: JSON results with metadata
     Frontend->>Frontend: Render 3D nodes
     Frontend-->>User: Display knowledge graph
+```
 
 ## How to run the app locally
 
