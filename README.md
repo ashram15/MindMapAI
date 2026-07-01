@@ -51,11 +51,11 @@ If a query isn't well-represented in the vector database, MindMapAI automaticall
 
 ### 3. Multi-Agent Research Mode 
 Activate Optimist, Critic, and Historian agents to explore a topic from three perspectives simultaneously. Each agent runs its own Gemini-prompted analysis and surfaces its own top-5 related nodes, letting you see a topic's opportunities, risks, and historical context side-by-side on the graph.
-`[Screenshot/GIF: multi-agent graph output]`
+![alt text](usage_assets/image3.png)
 
 ### 4. Image-Based Exploration 
 Upload an image and MindMapAI extracts key concepts using Gemini, then runs a vector search for each concept to find related articles. Results are deduplicated, ranked, and rendered directly into the graph.
-`[Screenshot/GIF: image upload → resulting graph]`
+![alt text](usage_assets/image4.png)
 
 ## Architecture Overview 
 ```text
